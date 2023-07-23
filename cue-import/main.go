@@ -14,25 +14,29 @@ func main() {
 	c := cuecontext.New()
 
 	b, err := os.ReadFile("schema.cue")
+
 	if err != nil {
 		log.Fatalf("err %e", err)
 	}
+
+	// get schema
 	schemaVal := c.CompileBytes(b, cue.Filename("schema.cue"))
+
 	if err := schemaVal.Err(); err != nil {
 		log.Fatalf("err %e", err)
 	}
 
-	schemaVal.Validate(cue.Schema())
-
+	// get yaml file
 	f, err := yaml.Extract("gpg.yaml", nil)
+
 	if err != nil {
 		log.Fatalf("err %e", err)
 	}
 
-	v := c.BuildFile(f, cue.Scope(schemaVal), cue.ImportPath("'gpg'"))
-	v2 := schemaVal.Unify(v)
+	v := c.BuildFile(f, cue.Scope(schemaVal), cue.ImportPath("gpg:config"))
 
-	err = v2.Validate()
+	err = v.Validate()
+
 	if err != nil {
 		log.Fatalf("err %e", err)
 	}
