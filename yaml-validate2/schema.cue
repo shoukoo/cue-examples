@@ -3,15 +3,15 @@ package config
 #Deployment: {
 	apiVersion: "apps/v1"
 	kind:       "Deployment"
-  _name: "web-app"
-	metadata: name: _name // make sure the name is consistent
+	metadata: name: string
+  let appname = metadata.name
 	spec: {
 		replicas: <4 // ensure the replicas less than 4
 		selector: {
-			matchLabels: app: _name
+			matchLabels: app: appname
 		}
 		template: {
-      metadata: labels: app: _name
+      metadata: labels: app: appname
 			spec: containers: [{
 				name:  "web-app-container"
 				image: =~ "^.*@sha256:[0-9a-f]{64}$" // ensure it sues image digest
