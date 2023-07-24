@@ -10,7 +10,28 @@ import (
 	"cuelang.org/go/encoding/yaml"
 )
 
+// Location contains information about where an error has occurred during cue
+// validation.
+type Location struct {
+	File   string `json:"file,omitempty"`
+	Line   int    `json:"line"`
+	Column int    `json:"column"`
+}
+
+// Error is a collection of fields that represent positions in files where the user
+// has made some kind of error.
+type Error struct {
+	Message  string   `json:"message"`
+	Location Location `json:"location"`
+}
+
+// Result is a collection of errors that occurred during validation.
+type Result struct {
+	Errors []Error `json:"errors"`
+}
+
 func main() {
+	var result Result
 	c := cuecontext.New()
 
 	b, err := os.ReadFile("schema.cue")
@@ -27,26 +48,24 @@ func main() {
 		log.Fatalf("err %e", err)
 	}
 	err = yaml.Validate(b2, schemaVal)
-	if err != nil {
-		log.Fatalf("err %v", cueerrors.Errors(err))
+
+	for _, e := range cueerrors.Errors(err) {
+		pos := cueerrors.Positions(e)
+		if len(pos) < 1 {
+			continue
+		}
+
+		p := pos[len(pos)-1]
+
+		result.Errors = append(result.Errors, Error{
+			Message: e.Error(),
+			Location: Location{
+				File:   "gpg.yaml",
+				Line:   p.Line(),
+				Column: p.Column(),
+			},
+		})
+		log.Fatalf("%+v\n", result)
 	}
 
-	// schemaVal.Validate(cue.Schema())
-	//
-	// f, err := yaml.Extract("gpg.yaml", nil)
-	//
-	//	if err != nil {
-	//		log.Fatalf("err %e", err)
-	//	}
-	//
-	// v := c.BuildFile(f, cue.Scope(schemaVal), cue.ImportPath("'gpg'"))
-	// v2 := schemaVal.Unify(v)
-	//
-	// err = v2.Validate()
-	//
-	//	if err != nil {
-	//		log.Fatalf("err %e", err)
-	//	}
-	//
-	// fmt.Printf("%v \n", v)
 }
