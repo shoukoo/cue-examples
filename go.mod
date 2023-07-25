@@ -1,6 +1,6 @@
 module cue-import
 
-go 1.19
+go 1.20
 
 require (
 	cuelang.org/go v0.5.0 // indirect
